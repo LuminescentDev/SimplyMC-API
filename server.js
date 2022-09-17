@@ -9,14 +9,21 @@ Canvas.registerFont("./assets/fonts/MinecraftRegular.otf", { family: "MinecraftR
 Canvas.registerFont("./assets/fonts/MinecraftBoldItalic.otf", { family: "MinecraftBoldItalic" });
 
 app.get("/gradient/:preset", (req, res) => {
-    const preset = decodeGradient(req.params.preset);
-    // const preview = createPreview(preset.colors, preset.text, preset.formats);
-    const output = createPresetOutput(preset.colors, preset.text, preset.formats);
-    res.status(200);
-    res.json({
-        // Image: preview,
-        Output: output,
-    });
+    try{
+        const preset = decodePreset(req.params.preset);
+        const preview = createPreview(preset.colors, preset.text, preset.formats);
+        const output = createPresetOutput(preset.colors, preset.text, preset.formats);
+        res.status(200);
+        res.json({
+            Preview: preview,
+            Output: output,
+        });
+    }catch(e){
+        res.status(400);
+        res.json({
+            Error: "Error while parsing preset"
+        });
+    }
 });
 
 app.get("/gradient", (req, res) => {
@@ -59,13 +66,14 @@ function fromBinary(encoded) {
     return String.fromCharCode(...new Uint16Array(bytes.buffer));
 }
 
-function decodeGradient(preset) {
-    const string = fromBinary(preset);
-    const data = string.split(':-:');
-    const colors = data[0].split(',');
-    const text = data[1];
-    const formats = decompress(data[2], 4);
-    return { colors, text, formats };
+function decodePreset(preset) {
+    preset = fromBinary(preset);
+    preset = JSON.parse(preset);
+    const version = preset.version;
+    const colors = preset.colors;
+    const text = preset.text;
+    const formats = decompress(preset.formats, 4);
+    return { version, colors, text, formats };
 }
 
 function decodeAnimTAB(preset) {
