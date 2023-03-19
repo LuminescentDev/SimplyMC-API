@@ -9,30 +9,24 @@ Canvas.registerFont("./src/assets/fonts/MinecraftItalic.otf", { family: "Minecra
 Canvas.registerFont("./src/assets/fonts/MinecraftRegular.otf", { family: "MinecraftRegular" });
 Canvas.registerFont("./src/assets/fonts/MinecraftBoldItalic.otf", { family: "MinecraftBoldItalic" });
 
-app.get("/gradient", (req, res) => {
-    if(Object.keys(req.query).length == 0) return res.status(400).send("No query provided.");
-
-    const newData = req.query;
-    if(!newData.text) return res.status(400).send("No text provided.");
-    if(!newData.colors) return res.status(400).send("No colors provided.");
-    if(!newData.format) return res.status(400).send("No format provided.");
-    if(!newData.formatchar) return res.status(400).send("No formatchar provided.");
-
-    const text = newData.text as string;
-    const colors = newData.colors as string;
-    const format = newData.format as string;
-    const formatchar = newData.formatchar as string;
-    const prefix = newData.prefix as string || "";
-    const bold = newData.bold === "true";
-    const italic = newData.italic === "true";
-    const underline = newData.underline === "true";
-    const strikethrough = newData.StrikeThrough === "true";
-
-    const output = generateOutput(text, colors.split(","), format, formatchar, prefix, bold, italic, underline, strikethrough);
-    res.status(200)
-    res.json({
-        output: output
-    })
+interface QueryParams {
+    text: string;
+    colors: string;
+    format: string;
+    formatchar: string;
+    prefix?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    StrikeThrough?: boolean;
+}
+  
+app.get("/gradient", (req: express.Request<{}, {}, {}, QueryParams>, res: express.Response) => {
+    const { text, colors, format, formatchar, prefix = "", bold = false, italic = false, underline = false, StrikeThrough = false } = req.query;
+    if (!text || !colors || !format || !formatchar) {
+        return res.status(400).send("Missing query parameters.");
+    }
+    res.status(200).json({ output: generateOutput(text, colors.split(","), format, formatchar, prefix, bold, italic, underline, StrikeThrough) });
 });
 
 app.listen(port, null, null);
