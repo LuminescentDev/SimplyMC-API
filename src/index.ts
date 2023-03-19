@@ -13,7 +13,6 @@ app.get("/gradient", (req, res) => {
     if(Object.keys(req.query).length == 0) return res.status(400).send("No query provided.");
 
     const newData = req.query;
-    console.log(newData);
     if(!newData.text) return res.status(400).send("No text provided.");
     if(!newData.colors) return res.status(400).send("No colors provided.");
     if(!newData.format) return res.status(400).send("No format provided.");
