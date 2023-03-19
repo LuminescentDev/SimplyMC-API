@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "colors": [
+        "#00FFE0",
+        "#EB00FF"
+    ],
+    "text": "SimplyMC",
+    "format": "&#$1$2$3$4$5$6$f$c",
+    "formatchar": "&",
+    "customFormat": false,
+    "prefix": "",
+    "bold": false,
+    "italic": false,
+    "underline": false,
+    "strikethrough": false
+}
