@@ -116,17 +116,15 @@ export function trim(s: string): string {
 
 
 export function convertToRGB(hex: string): number[] {
-  const color: number[] = [];
-  color[0] = parseInt((trim(hex)).substring(1, 3), 16);
-  color[1] = parseInt((trim(hex)).substring(3, 5), 16);
-  color[2] = parseInt((trim(hex)).substring(5, 7), 16);
+  const color = [];
+  color[0] = parseInt((trim(hex)).substring(0, 2), 16);
+  color[1] = parseInt((trim(hex)).substring(2, 4), 16);
+  color[2] = parseInt((trim(hex)).substring(4, 6), 16);
   return color;
 }
 
 export function generateOutput(text: string, colors: string[], format: string, formatchar: string, prefix: string, bold: boolean, italic: boolean, underline: boolean, strikethrough: boolean): string {
-  
-  let newColors = colors.map((color: string) => convertToRGB(color));
-
+  let newColors = colors?.map((color: string) => convertToRGB(color));
   if (newColors.length < 2) newColors = [convertToRGB('#00FFE0'), convertToRGB('#EB00FF')];
 
   let output = prefix;
@@ -157,4 +155,80 @@ export function generateOutput(text: string, colors: string[], format: string, f
   }
 
   return output;
+}
+
+export function generateAnimationOutput(colors: string[], name: string, text: string, type: number, speed: number, format: string, formatchar: string, outputFormat: string, bold: boolean, italic: boolean, underline: boolean, strikethrough: boolean, length: number) {
+  let newColors = colors.map((color: string) => convertToRGB(color));
+  if(newColors.length < 2) newColors = [convertToRGB('#00FFE0'), convertToRGB('#EB00FF')];
+
+  let loopAmount;
+  switch(type) {
+    default:
+      loopAmount = text.length * length * 2 - 2;
+      break;
+    case 3:
+      loopAmount = text.length * length;
+      break;
+  }
+
+  let outputArray = [];
+  for (let n = 0; n < loopAmount; n++){
+    let clrs = [];
+    const gradient = new AnimatedGradient(newColors, text.length, n);
+    let output = '';
+    gradient.next();
+    if (type == 4){
+      const hex = convertToHex(gradient.next());
+      clrs.push(hex);
+      let hexOutput = format;
+      for (let n = 1; n <= 6; n++) hexOutput = hexOutput.replace(`$${n}`, hex.charAt(n - 1));
+      let formatCodes = '';
+      if (format.includes('$f')) {
+        if (bold) formatCodes += formatchar + 'l';
+        if (italic) formatCodes += formatchar + 'o';
+        if (underline) formatCodes += formatchar + 'n';
+        if (strikethrough) formatCodes += formatchar + 'm';
+      }
+      hexOutput = hexOutput.replace('$f', formatCodes);
+      hexOutput = hexOutput.replace('$c', text);
+      outputArray.push(`  - "${hexOutput}"`);
+    }else {
+      for (let i = 0; i < text.length; i++){
+        const char = text.charAt(i);
+        if(char == " " ) {
+          output += char;
+          clrs.push(null)
+          continue;
+        }
+
+        const hex = convertToHex(gradient.next());
+        clrs.push(hex);
+        let hexOutput = format;
+        for (let n = 1; n <= 6; n++) hexOutput = hexOutput.replace(`$${n}`, hex.charAt(n - 1));
+        let formatCodes = '';
+        if (format.includes('$f')) {
+          if (bold) formatCodes += formatchar + 'l';
+          if (italic) formatCodes += formatchar + 'o';
+          if (underline) formatCodes += formatchar + 'n';
+          if (strikethrough) formatCodes += formatchar + 'm';
+        }
+        hexOutput = hexOutput.replace('$f', formatCodes);
+        hexOutput = hexOutput.replace('$c', char);
+        output += hexOutput;
+      }
+      outputArray.push(`  - "${output}"`);
+    }
+  }
+  let finalOutput = '';
+  finalOutput = outputFormat.replace("%name%", name)
+  finalOutput = finalOutput.replace("%speed%", speed.toString())
+  if(type == 1){
+    outputArray.reverse();
+  }else if (type == 3){
+    const outputArray2 = outputArray.slice();
+    outputArray = outputArray.reverse().concat(outputArray2);
+  }
+
+  finalOutput = finalOutput.replace("%output%", outputArray.join("\n"));
+  return  {finalOutput};
 }
