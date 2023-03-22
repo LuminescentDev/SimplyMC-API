@@ -1,6 +1,6 @@
 import express from 'express';
 import { port } from './config.json';
-import { generateOutput, generateAnimationOutput } from './utils/GradientUtils';
+import { generateOutput, generateAnimationOutput, createPreview } from './utils/GradientUtils';
 const app = express();
 
 interface QueryParams {
@@ -32,7 +32,7 @@ app.get("/gradient", async (req: express.Request<{}, {}, {}, QueryParams>, res: 
     }
     res.status(200).json({ 
         output: generateOutput(text, colors.split(","), format, formatchar, prefix, bold, italic, underline, strikethrough),
-    
+        preview: createPreview(colors.split(","), text, bold, italic, underline, strikethrough),
     });
 });
 app.get("/animation", async (req: express.Request<{}, {}, {}, QueryParams>, res: express.Response) => {

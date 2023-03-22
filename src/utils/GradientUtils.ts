@@ -2,6 +2,13 @@
  * Typescript implementation of HexUtils Gradients from RoseGarden.
  * https://github.com/Rosewood-Development/RoseGarden/blob/master/src/main/java/dev/rosewood/rosegarden/utils/HexUtils.java#L358
  */
+import Canvas, { CanvasRenderingContext2D } from 'canvas';
+
+Canvas.registerFont("./src/assets/fonts/MinecraftBold.otf", { family: "MinecraftBold" });
+Canvas.registerFont("./src/assets/fonts/MinecraftItalic.otf", { family: "MinecraftItalic" });
+Canvas.registerFont("./src/assets/fonts/MinecraftRegular.otf", { family: "MinecraftRegular" });
+Canvas.registerFont("./src/assets/fonts/MinecraftBoldItalic.otf", { family: "MinecraftBoldItalic" });
+
 export class Gradient {
   colors: number[][];
   gradients: any[];
@@ -231,4 +238,44 @@ export function generateAnimationOutput(colors: string[], name: string, text: st
 
   finalOutput = finalOutput.replace("%output%", outputArray.join("\n"));
   return  {finalOutput};
+}
+
+export function createPreview(colors: string[], text: string, bold: boolean, italic: boolean, underline: boolean, strikethrough: boolean) {
+  const newColors = [];
+  for (let i = 0; i< colors.length; i++) newColors.push(convertToRGB(colors[i]));
+  const gradient = new Gradient(newColors, text.replace(/ /g, '').length);
+  const outputColors = [];
+  for (let i = 0; i < text.length; i++) outputColors.push(convertToHex(gradient.next()));
+  const canvas = Canvas.createCanvas(700, 250);
+  texter(canvas, text, outputColors, 10, 60, bold, italic, underline, strikethrough);
+  return canvas.toDataURL();
+}
+
+function applyText(canvas: Canvas.Canvas, text: string, bold: boolean, italic: boolean) {
+  const ctx = canvas.getContext('2d');
+  
+  let fontSize = 70;
+
+  let font = bold ? (italic ? 'MinecraftBoldItalic' : 'MinecraftBold') : (italic ? 'MinecraftItalic' : 'MinecraftRegular');
+
+  do {
+    ctx.font = `${fontSize -= 1}px ${font}`;
+  }while (ctx.measureText(text).width > canvas.width - 50);
+
+  return ctx.font;
+}
+
+function texter(canvas: Canvas.Canvas, str: string, colors: string[], x: number, y: number, bold: boolean, italic: boolean, underline: boolean, strikethrough: boolean ) {
+  const ctx = canvas.getContext('2d');
+  ctx.font = applyText(canvas, str, bold, italic);
+  for(let i = 0; i <= str.length; i++){
+    const hex = colors[i];
+    const char = str.charAt(i);
+    ctx.fillStyle = '#' + hex;
+    ctx.fillText(char, x, y);
+    const { width } = ctx.measureText(char);
+    if(underline) ctx.fillRect(x, y * 1.05, width, width / 6);
+    if(strikethrough) ctx.fillRect(x, y / 1.25, width, width / 6);
+    x += ctx.measureText(char).width;
+  }
 }
